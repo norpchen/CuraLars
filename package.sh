@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script is to package the Cura package for Windows/Linux and Mac OS X
 # This script should run under Linux and Mac OS X, as well as Windows with Cygwin.
@@ -13,11 +13,12 @@ BUILD_TARGET=${1:-none}
 #BUILD_TARGET=darwin
 #BUILD_TARGET=debian_i386
 #BUILD_TARGET=debian_amd64
+#BUILD_TARGET=freebsd
 
 ##Do we need to create the final archive
 ARCHIVE_FOR_DISTRIBUTION=1
 ##Which version name are we appending to the final archive
-export BUILD_NAME=14.03-TEST2
+export BUILD_NAME=14.06
 TARGET_DIR=Cura-${BUILD_NAME}-${BUILD_TARGET}
 
 ##Which versions of external programs to use
@@ -33,7 +34,7 @@ fi
 #############################
 function checkTool
 {
-	if [ -z `which $1` ]; then
+	if [ -z "`which $1`" ]; then
 		echo "The $1 command must be somewhere in your \$PATH."
 		echo "Fix your \$PATH or install $2"
 		exit 1
@@ -74,6 +75,7 @@ if [ "$BUILD_TARGET" = "none" ]; then
 	echo "$0 debian_i368"
 	echo "$0 debian_amd64"
 	echo "$0 darwin"
+	echo "$0 freebsd"
 	exit 0
 fi
 
@@ -121,7 +123,7 @@ if [ "$BUILD_TARGET" = "darwin" ]; then
     if [ $? != 0 ]; then echo "Failed to clone CuraEngine"; exit 1; fi
 	make -C CuraEngine VERSION=${BUILD_NAME}
     if [ $? != 0 ]; then echo "Failed to build CuraEngine"; exit 1; fi
-	cp CuraEngine/CuraEngine scripts/darwin/dist/Cura.app/Contents/Resources/CuraEngine
+	cp CuraEngine/build/CuraEngine scripts/darwin/dist/Cura.app/Contents/Resources/CuraEngine
 
 	cd scripts/darwin
 
@@ -169,7 +171,7 @@ if [ "$BUILD_TARGET" = "debian_i386" ]; then
 	cp -a Cura scripts/linux/${BUILD_TARGET}/usr/share/cura/
 	cp -a resources scripts/linux/${BUILD_TARGET}/usr/share/cura/
 	cp -a plugins scripts/linux/${BUILD_TARGET}/usr/share/cura/
-	cp -a CuraEngine/CuraEngine scripts/linux/${BUILD_TARGET}/usr/share/cura/
+	cp -a CuraEngine/build/CuraEngine scripts/linux/${BUILD_TARGET}/usr/share/cura/
 	cp scripts/linux/cura.py scripts/linux/${BUILD_TARGET}/usr/share/cura/
 	cp -a Power/power scripts/linux/${BUILD_TARGET}/usr/share/cura/
 	echo $BUILD_NAME > scripts/linux/${BUILD_TARGET}/usr/share/cura/Cura/version
@@ -205,7 +207,7 @@ if [ "$BUILD_TARGET" = "debian_amd64" ]; then
 	cp -a Cura scripts/linux/${BUILD_TARGET}/usr/share/cura/
 	cp -a resources scripts/linux/${BUILD_TARGET}/usr/share/cura/
 	cp -a plugins scripts/linux/${BUILD_TARGET}/usr/share/cura/
-	cp -a CuraEngine/CuraEngine scripts/linux/${BUILD_TARGET}/usr/share/cura/
+	cp -a CuraEngine/build/CuraEngine scripts/linux/${BUILD_TARGET}/usr/share/cura/
 	cp scripts/linux/cura.py scripts/linux/${BUILD_TARGET}/usr/share/cura/
 	cp -a Power/power scripts/linux/${BUILD_TARGET}/usr/share/cura/
 	echo $BUILD_NAME > scripts/linux/${BUILD_TARGET}/usr/share/cura/Cura/version
@@ -316,7 +318,7 @@ echo $BUILD_NAME > ${TARGET_DIR}/Cura/version
 #add script files
 if [ $BUILD_TARGET = "win32" ]; then
     cp -a scripts/${BUILD_TARGET}/*.bat $TARGET_DIR/
-    cp CuraEngine/CuraEngine.exe $TARGET_DIR
+    cp CuraEngine/build/CuraEngine.exe $TARGET_DIR
 else
     cp -a scripts/${BUILD_TARGET}/*.sh $TARGET_DIR/
 fi

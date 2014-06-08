@@ -157,11 +157,12 @@ class EngineResult(object):
 			'version': version.getVersion(),
 		}
 		try:
-			f = urllib2.urlopen("http://www.youmagine.com/curastats/", data = urllib.urlencode(data), timeout = 1)
+			f = urllib2.urlopen("https://www.youmagine.com/curastats/", data = urllib.urlencode(data), timeout = 1)
 			f.read()
 			f.close()
 		except:
-			pass
+			import traceback
+			traceback.print_exc()
 
 class Engine(object):
 	"""
@@ -482,6 +483,8 @@ class Engine(object):
 			'coolHeadLift': 1 if profile.getProfileSetting('cool_head_lift') == 'True' else 0,
 			'startCode': profile.getAlterationFileContents('start.gcode', extruderCount),
 			'endCode': profile.getAlterationFileContents('end.gcode', extruderCount),
+			'preSwitchExtruderCode': profile.getAlterationFileContents('preSwitchExtruder.gcode', extruderCount),
+			'postSwitchExtruderCode': profile.getAlterationFileContents('postSwitchExtruder.gcode', extruderCount),
 
 			'extruderOffset[1].X': int(profile.getMachineSettingFloat('extruder_offset_x1') * 1000),
 			'extruderOffset[1].Y': int(profile.getMachineSettingFloat('extruder_offset_y1') * 1000),
@@ -520,6 +523,15 @@ class Engine(object):
 			settings['raftBaseLinewidth'] = int(profile.getProfileSettingFloat('raft_base_linewidth') * 1000)
 			settings['raftInterfaceThickness'] = int(profile.getProfileSettingFloat('raft_interface_thickness') * 1000)
 			settings['raftInterfaceLinewidth'] = int(profile.getProfileSettingFloat('raft_interface_linewidth') * 1000)
+			settings['raftInterfaceLineSpacing'] = int(profile.getProfileSettingFloat('raft_interface_linewidth') * 1000 * 2.0)
+			settings['raftAirGapLayer0'] = int(profile.getProfileSettingFloat('raft_airgap') * 1000)
+			settings['raftBaseSpeed'] = int(profile.getProfileSettingFloat('bottom_layer_speed'))
+			settings['raftFanSpeed'] = 100
+			settings['raftSurfaceThickness'] = settings['raftInterfaceThickness']
+			settings['raftSurfaceLinewidth'] = int(profile.calculateEdgeWidth() * 1000)
+			settings['raftSurfaceLineSpacing'] = int(profile.calculateEdgeWidth() * 1000 * 0.9)
+			settings['raftSurfaceLayers'] = int(profile.getProfileSettingFloat('raft_surface_layers'))
+			settings['raftSurfaceSpeed'] = int(profile.getProfileSettingFloat('bottom_layer_speed'))
 		else:
 			settings['skirtDistance'] = int(profile.getProfileSettingFloat('skirt_gap') * 1000)
 			settings['skirtLineCount'] = int(profile.getProfileSettingFloat('skirt_line_count'))
@@ -544,8 +556,12 @@ class Engine(object):
 			settings['gcodeFlavor'] = 3
 		elif profile.getMachineSetting('gcode_flavor') == 'Mach3':
 			settings['gcodeFlavor'] = 4
+		elif profile.getMachineSetting('gcode_flavor') == 'RepRap (Volumetric)':
+			settings['gcodeFlavor'] = 5
 		if profile.getProfileSetting('spiralize') == 'True':
 			settings['spiralizeMode'] = 1
+		if profile.getProfileSetting('simple_mode') == 'True':
+			settings['simpleMode'] = 1
 		if profile.getProfileSetting('wipe_tower') == 'True' and extruderCount > 1:
 			settings['wipeTowerSize'] = int(math.sqrt(profile.getProfileSettingFloat('wipe_tower_volume') * 1000 * 1000 * 1000 / settings['layerThickness']))
 		if profile.getProfileSetting('ooze_shield') == 'True':
